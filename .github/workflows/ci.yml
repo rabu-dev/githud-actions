@@ -1,5 +1,5 @@
 name: CI
-on: push
+on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -12,3 +12,21 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install pytest && python -m pytest
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
